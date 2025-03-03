@@ -292,7 +292,7 @@ if 'predict' not in st.session_state:
 #
 # MAIN
 #
-
+st.set_page_config(page_title="Półmaraton - Wrocław", layout="centered")
 # OpenAI API key protection
 if not st.session_state.get("openai_api_key"):
     if "OPENAI_API_KEY" in env:
@@ -319,27 +319,29 @@ with st.sidebar:
     model_selected = st.selectbox('Który model wybierasz?', models_dict.keys())
     st.session_state.current_model_name = models_dict[model_selected]
     
-st.subheader("Podaj dane osoby aby poznać jak szybko przebiegnie półmaraton")  
+st.markdown("<center><h2>Podaj dane osoby aby poznać jak szybko przebiegnie półmaraton</h2></center>", unsafe_allow_html=True)  
 
 st.session_state.input_text = st.text_input("Wprowadź dane", placeholder="płeć, wiek, czas na 5 km w minutach")
 
 submit = st.button("Zatwierdź")
 
 if submit:
-    response = ""
-    response = get_data_from_text(prompt, st.session_state['input_text'])
-    response = str(response).replace("```json", "").replace("```", "")
+    st.write("---")
+    with st.spinner('Zaczekaj, trwa analiza żądania i przygotowanie odpowiedzi...'):
+        response = ""
+        response = get_data_from_text(prompt, st.session_state['input_text'])
+        response = str(response).replace("```json", "").replace("```", "")
 
-    answer = dict(json.loads(response))
+        answer = dict(json.loads(response))
 
-    is_valid = validate_response(answer)
+        is_valid = validate_response(answer)
 
     if is_valid != True:
         st.info(f"{is_valid}. Uzupełnij dane...")
     else:
         st.session_state.runner = get_response(answer)
         finalize_result()
-        st.subheader("Twój wynik:")
+        st.markdown("<center><h2>Twój wynik:</h2></center>", unsafe_allow_html=True)
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.metric('Płeć', value=st.session_state['runner']['sex'][0])
@@ -351,16 +353,16 @@ if submit:
             st.metric("Twój czas", value=convert_seconds_to_time(int(st.session_state['predict']['prediction_label']))) 
         
         st.write("---")
-        st.markdown("#### Twoje wirtualne miejsca w maratonach Wrocławskich")
+        st.markdown("<center><h2>Twoje wirtualne miejsca w maratonach Wrocławskich</h2></center>", unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("#### 2023")
+            st.markdown("<center><h2>2023</h2></center>", unsafe_allow_html=True)
             styled_2023 = get_your_place_df(m2023_df, st.session_state['runner'], st.session_state['predict']['prediction_label'])
             styled_2023 = styled_2023.style.apply(row_color, axis=1)
             st.dataframe(styled_2023, hide_index=True)
         with col2:
-            st.markdown("#### 2024")
+            st.markdown("<center><h2>2024</h2></center>", unsafe_allow_html=True)
             styled_2024 = get_your_place_df(m2024_df, st.session_state['runner'], st.session_state['predict']['prediction_label'])
             styled_2024 = styled_2024.style.apply(row_color, axis=1)
             st.dataframe(styled_2024, hide_index=True);
