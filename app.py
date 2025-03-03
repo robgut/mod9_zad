@@ -3,6 +3,8 @@ from dotenv import dotenv_values
 from dotenv import load_dotenv
 import pandas as pd
 import os
+from io import BytesIO
+from PIL import Image
 import json
 from openai import OpenAI
 # from langfuse.decorators import observe
@@ -84,6 +86,19 @@ def download_models():
         return None
 
     return models
+
+def download_image(img_name):
+    try:
+        s3 = get_digital_ocean_client()
+        image = BytesIO()
+        img_path = MODELS_PATH + "img/" + img_name
+        data = s3.download_fileobj(BUCKET_NAME, img_path, image)
+        image.seek(0)
+
+        return image
+    except:
+        return None
+
 
 def validate_response(response: dict = None):
     if dict == None:
@@ -271,6 +286,20 @@ prompt = """
     Jesteś asystentem, który zawsze zwraca odpowiedź w formacie JSON. Otrzymasz dane zawierające informacje o płci, wieku i czasie na 5 km w minutach. Niech odpowiednie zmienne nazywają się: gender, age, 5time. Zwróć je w języku angielskim
 """
 
+model_mapping = 	{
+		'gbr':'GradientBoostingRegressor', 
+		'catboost':'CatBoostRegressor', 
+		'lightgbm':'LGBMRegressor', 
+		'en':'ElasticNet', 
+		'llar':'LassoLars', 
+		'omp':'OrthogonalMatchingPursuit', 
+		'br':'BayesianRidge', 
+		'lasso':'Lasso', 
+		'lr':'LinearRegression', 
+		'ridge':'Ridge',
+        'llar':'LassoLars',
+	}
+
 if 'input_text' not in st.session_state:
     st.session_state['input_text'] = ""
 
@@ -314,13 +343,21 @@ m2023_df, m2024_df = read_data_files()
 
 with st.sidebar:
     st.write("#### Wytrenowaliśmy kilka modeli")
-    st.write("#### Po dokonaniu wyboru, zobaczysz jak różnią się przewidywane czasy ukończenia półmaratonu")
+    st.write("#### Wybierając model, zobaczysz jak różnią się przewidywane czasy ukończenia półmaratonu")
     st.divider()
     model_selected = st.selectbox('Który model wybierasz?', models_dict.keys())
+    st.markdown(f"### Wybrany model: **{model_mapping[model_selected[:-2]]}**", unsafe_allow_html=True)
     st.session_state.current_model_name = models_dict[model_selected]
-    
-st.markdown("<center><h2>Podaj dane osoby aby poznać jak szybko przebiegnie półmaraton</h2></center>", unsafe_allow_html=True)  
+    st.divider()
+    st.markdown("### Które cechy modelu najbardziej wpływają na wynik ?")
+    img = download_image(model_selected + ".png").getvalue()
+    st.image(img)
 
+st.markdown("<center><h2>Podaj dane osoby aby poznać jak szybko przebiegnie półmaraton</h2></center>", unsafe_allow_html=True)  
+st.markdown("<center>Nie wahaj się przed wprowadzaniem wartości brzegowych, np. <b>janek 5 2</b></center>", unsafe_allow_html=True)
+st.markdown("<center>lub <b>Anna 60 80</b> albo <b>woman1537</b> i zmieniaj modele, <b>wyniki mogą być zaskakujące!</b></center>", unsafe_allow_html=True)
+st.markdown("<center>Te zwykłe zapytania też są dobre, np. <b>Rysiek 35 29</b></center>", unsafe_allow_html=True)
+st.markdown("<center><h2>Dobrej zabawy</h2></center>", unsafe_allow_html=True)
 st.session_state.input_text = st.text_input("Wprowadź dane", placeholder="płeć, wiek, czas na 5 km w minutach")
 
 submit = st.button("Zatwierdź")
