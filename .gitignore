@@ -1,0 +1,10 @@
+*.pkl
+*.log
+*.csv
+catboost_info
+*.pkl
+pandas.*
+predict.*
+time_series.*
+dict_train.*
+41__zadanie_domowe.*
