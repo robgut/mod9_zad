@@ -150,7 +150,7 @@ def row_color(row):
     if row['Nazwisko'] == "Ty":
         return ['background-color:orange'] * len(row)
     else:
-        return ['background-color:white'] * len(row)
+        return [''] * len(row)
     
 def get_difference(row, your_time: int):
     return (your_time - row['Czas'])
