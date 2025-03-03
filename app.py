@@ -9,8 +9,6 @@ from openai import OpenAI
 # from langfuse.openai import OpenAI as LangfuseOpenAI
 # from langfuse import Langfuse
 import boto3
-import matplotlib.pyplot as plt
-import seaborn as sns
 from pycaret.regression import setup, load_model, plot_model, predict_model # type: ignore
 
 
