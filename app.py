@@ -24,6 +24,20 @@ MODELS_PATH = 'halfmarathon/models/'
 DATA_PATH = 'halfmarathon/data/'
 BUCKET_NAME = "nowy"
 
+model_mapping = 	{
+		'gbr':'GradientBoostingRegressor', 
+		'catboost':'CatBoostRegressor', 
+		'lightgbm':'LGBMRegressor', 
+		'en':'ElasticNet', 
+		'llar':'LassoLars', 
+		'omp':'OrthogonalMatchingPursuit', 
+		'br':'BayesianRidge', 
+		'lasso':'Lasso', 
+		'lr':'LinearRegression', 
+		'ridge':'Ridge',
+        'llar':'LassoLars',
+	}
+
 def get_openai_client():
     return OpenAI(api_key=st.session_state["openai_api_key"])
 
@@ -277,27 +291,13 @@ def finalize_result():
 
 @st.cache_resource
 def get_model_names(model_path: list) -> dict:
-    models = {os.path.splitext(os.path.basename(model_path[x]))[0] : model_path[x] for x in range(len(model_path))}
+    models = {model_mapping[(os.path.splitext(os.path.basename(model_path[x]))[0])[:-2]] : [model_path[x], os.path.splitext(os.path.basename(model_path[x]))[0]] for x in range(len(model_path))}
 
     return models
 
 prompt = """
     Jesteś asystentem, który zawsze zwraca odpowiedź w formacie JSON. Otrzymasz dane zawierające informacje o płci, wieku i czasie na 5 km w minutach. Niech odpowiednie zmienne nazywają się: gender, age, 5time. Zwróć je w języku angielskim
 """
-
-model_mapping = 	{
-		'gbr':'GradientBoostingRegressor', 
-		'catboost':'CatBoostRegressor', 
-		'lightgbm':'LGBMRegressor', 
-		'en':'ElasticNet', 
-		'llar':'LassoLars', 
-		'omp':'OrthogonalMatchingPursuit', 
-		'br':'BayesianRidge', 
-		'lasso':'Lasso', 
-		'lr':'LinearRegression', 
-		'ridge':'Ridge',
-        'llar':'LassoLars',
-	}
 
 if 'input_text' not in st.session_state:
     st.session_state['input_text'] = ""
@@ -345,11 +345,11 @@ with st.sidebar:
     st.write("#### Wybierając model, zobaczysz jak różnią się przewidywane czasy ukończenia półmaratonu")
     st.divider()
     model_selected = st.selectbox('Który model wybierasz?', models_dict.keys())
-    st.markdown(f"### Wybrany model: **{model_mapping[model_selected[:-2]]}**", unsafe_allow_html=True)
-    st.session_state.current_model_name = models_dict[model_selected]
+
+    st.session_state.current_model_name = models_dict[model_selected][0]
     st.divider()
     st.markdown("### Które cechy modelu najbardziej wpływają na wynik ?")
-    img = download_image(model_selected + ".png").getvalue()
+    img = download_image(models_dict[model_selected][1] + ".png").getvalue()
     st.image(img)
 
 st.markdown("<center><h3>Podaj dane osoby aby poznać jak szybko przebiegnie półmaraton</h3></center>", unsafe_allow_html=True)  
